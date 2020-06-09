@@ -1,0 +1,29 @@
+{{define "index"}}
+<html>
+
+<head>
+	<title>Note-Man</title>
+	<script type="text/javascript" src="static/js/lib/require.min.js"></script>
+	<script type="text/javascript" src="static/js/require.config.js"></script>
+	<link rel="stylesheet" href="static/js/lib/jquery/jquery-ui.css" />
+	<link rel="stylesheet" href="static/css/style.css" />
+	<script type="text/javascript">
+		var appl;
+		require([
+			"passen-client"
+		], function (passen) {
+			"use strict";
+			var app = new passen.Application();
+			appl = app;
+
+		});
+	</script>
+</head>
+
+<body>
+	Hello Gen Kenobi!!!!
+
+</body>
+
+</html>
+{{end}}
