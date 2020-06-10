@@ -37,12 +37,34 @@ define([
                     this.exit()
                 }
             }.bind(this));
+            var search = $("#search");
+            search.on("keypress keyup keydown", function( event ) {
+                if ( event.which == 13 ) {
+                    event.preventDefault();
+                }
+                var searchValue = search.val().toLowerCase();
+                var elems = $("#data-elements").children();
+                for (var i = 0; i < elems.length; i++) {
+                    var elem = $(elems[i]);
+                    if(!searchValue){
+                        elem.show();
+                        continue;
+                    }
+                    var name = elem.data("dataName").toLowerCase();
+                    if (name.indexOf(searchValue) > -1){
+                        elem.show();
+                    }else{
+                        elem.hide();
+                    }
+                }
+            });
             this.$el.show();
         },
         exit: function(){
             window.location.reload();
         },
         sortData: function (data) {
+            if (!data) return [];
             return data.sort(function (a, b) {
                 return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0)
             });
@@ -118,8 +140,8 @@ define([
             });
         },
         dataSaved: function (data) {
-            if (!data.error) {
-                this.showMessage("Data saved");
+            if (data.error) {
+                this.showMessage(data.error);
             }
             this.showData(data);
         },

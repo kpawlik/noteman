@@ -6,13 +6,11 @@ define([
     //"text!html/login.html!strip",
     "text!html/dialog.html!strip",
     "text!html/body.html!strip",
-    "text!html/tools.html!strip",
     "jquery-ui",
-    "passen/export",
     "passen/login",
     "passen/data"
     ,
-], function ($, backbone, passen, dataHTML, dialogHTML, bodyHTML, toolsHTML) {
+], function ($, backbone, passen, dataHTML, dialogHTML, bodyHTML) {
     "use strict";
     passen.Application = passen.Class.extend({
         initialize: function () {
@@ -55,67 +53,7 @@ define([
             this.dataView.showData(data);
         },
 
-        showToolsClick: function () {
-            if ($("#toolsMenu").length == 0) {
-                this.appendHtml("#body", toolsHTML).then(this.showTools.bind(this));
-                this.export = new passen.Export(this.credentials);
-            } else {
-                this.showTools();
-            }
-
-        },
-        showTools: function () {
-            $("#toolsMenu").show();
-            $("#data").hide();
-            $("#back").on("click", function () {
-                $("#toolsMenu").hide();
-                $("#data").show();
-
-            }.bind(this));
-
-            this.importDialog = $("#import-dialog").dialog({
-                autoOpen: false,
-                modal: true,
-                width: "80%",
-                height: 600,
-                position: { my: "center top", at: "center top", },
-                buttons: [
-                    {
-                        text: "Import",
-                        click: function () {
-                            var obj = {
-                                "name": this.userName,
-                                "pswd": this.userPswd,
-                                "data": $("#import-value").val()
-                            }
-                            $.ajax({
-                                type: "POST",
-                                url: "/import",
-                                data: obj,
-                                success: function (data) {
-                                    if (data.userData === "OK") {
-                                        this.importDialog.dialog("close");
-                                    } else {
-                                        alert(data.error);
-                                    }
-                                }.bind(this),
-                                dataType: "json",
-                                error: this.failed.bind(this)
-                            });
-                        }.bind(this)
-                    },
-                    {
-                        text: "Close",
-                        click: function () {
-                            $(this).dialog("close");
-                        }
-                    }
-                ]
-            });
-           $("#import").on("click", function () {
-                this.importDialog.dialog("open");
-            }.bind(this));
-        },
+        
     });
 
     return passen.Application;

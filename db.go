@@ -1,12 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
-
-	"database/sql"
+	"path"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -54,6 +54,11 @@ func newDbContext() *dbContext {
 		err error
 	)
 	if !fileExists(dbFile) {
+		dir, _ := path.Split(dbFile)
+		if err = os.MkdirAll(dir, 0644); err != nil {
+			log.Printf("Error: %v", err)
+			return nil
+		}
 		if err = createDBSchema(dbFile); err != nil {
 			log.Printf("Error: %v", err)
 			return nil
