@@ -51,7 +51,8 @@ define([
                         continue;
                     }
                     var name = elem.data("dataName").toLowerCase();
-                    if (name.indexOf(searchValue) > -1){
+                    var value = elem.data("dataValue").toLowerCase();
+                    if (name.indexOf(searchValue) > -1 || value.indexOf(searchValue) > -1){
                         elem.show();
                     }else{
                         elem.hide();
