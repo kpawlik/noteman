@@ -1,5 +1,5 @@
 require.config({
-	baseUrl: "../../static/js",
+	baseUrl: "static/js",
 	paths: {
         "backbone": "./lib/backbone-min",
 		"bluebird": "./lib/bluebird",

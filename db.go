@@ -11,11 +11,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const (
-	dataTableName = "data"
-	authTableName = "auth"
-	dbFile        = "./db/notman.db"
-)
+
 
 func fileExists(filename string) bool {
 	info, err := os.Stat(filename)

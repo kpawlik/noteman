@@ -44,7 +44,7 @@ define([
             }
             $.ajax({
                 type: "POST",
-                url: "/data?" + new Date().getUTCMilliseconds(),
+                url: "data?" + new Date().getUTCMilliseconds(),
                 data: obj,
                 success: this.loginSuccess.bind(this),
                 dataType: "json",

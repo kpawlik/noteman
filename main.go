@@ -6,13 +6,21 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
+	"flag"
+)
+
+var (
+	port string
+	dbFile string
 )
 
 func init() {
 	var (
 		db *dbContext
 	)
+	flag.StringVar(&dbFile, "dbFile", "./db/noteman.db", "Database file path")
+	flag.StringVar(&port, "port", "9991", "Port number")
+	flag.Parse()
 	// init static file server
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -100,7 +108,6 @@ func getData(w http.ResponseWriter, r *http.Request, db *dbContext) (result JSON
 		db.error(err)
 		return
 	}
-	db.log(fmt.Sprintf("User %s exists = %v", name, exists))
 	if !exists {
 		return
 	}
@@ -150,12 +157,6 @@ func saveData(w http.ResponseWriter, r *http.Request, db *dbContext) (result JSO
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-		log.Printf("Defaulting to port %s", port)
-	}
-
 	log.Printf("Listening on port %s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)

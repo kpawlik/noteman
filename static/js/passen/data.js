@@ -133,7 +133,7 @@ define([
             }
             $.ajax({
                 type: "POST",
-                url: "/save",
+                url: "save",
                 data: obj,
                 success: this.dataSaved.bind(this),
                 dataType: "json",
