@@ -1,2 +1,7 @@
+build.sh
+nohup.out
+noteman
+noteman.log
+run.sh
 *.exe
 db/
