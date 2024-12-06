@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"flag"
+	"os"
+	"path/filepath"
 )
 
 var (
@@ -18,11 +20,13 @@ func init() {
 	var (
 		db *dbContext
 	)
-	flag.StringVar(&dbFile, "dbFile", "./db/noteman.db", "Database file path")
+	currentDir := getCurrentDir()
+	flag.StringVar(&dbFile, "dbFile", filepath.Join(currentDir, "db", "noteman.db"), "Database file path")
 	flag.StringVar(&port, "port", "9991", "Port number")
 	flag.Parse()
+	
 	// init static file server
-	fs := http.FileServer(http.Dir("./static"))
+	fs := http.FileServer(http.Dir(filepath.Join(currentDir, "static")))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	// init database
 	if db = newDbContext(); db == nil {
@@ -32,6 +36,15 @@ func init() {
 	http.Handle("/data", newHandler(getDataHandler, db))
 	http.Handle("/save", newHandler(saveDataHandler, db))
 	http.Handle("/", newHandler(indexHandler, db))
+}
+
+func getCurrentDir() string{
+	execPath, err :=  os.Executable()
+	if err != nil{
+		panic(err)
+	}
+	execDir := filepath.Dir(execPath)
+	return execDir
 }
 
 // JSONMap wrapper for JSON object
@@ -75,7 +88,8 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request, db *dbContext) error {
-	templates, err := template.ParseFiles("templates/index.html")
+	currentDir := getCurrentDir()
+	templates, err := template.ParseFiles(filepath.Join(currentDir, "templates", "index.html"))
 	if err != nil {
 		return err
 	}

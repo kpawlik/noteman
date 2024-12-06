@@ -8,7 +8,7 @@ import (
 	"os"
 	"path"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 
@@ -23,7 +23,7 @@ func fileExists(filename string) bool {
 
 func createDBSchema(filename string) error {
 	log.Printf("Database schema will be created in db %s", filename)
-	db, err := sql.Open("sqlite3", dbFile)
+	db, err := sql.Open("sqlite", dbFile)
 	if err != nil {
 		return fmt.Errorf("Error open database: %v", err)
 	}
@@ -61,7 +61,7 @@ func newDbContext() *dbContext {
 		}
 	}
 	log.Printf("Opening database %s", dbFile)
-	db, err := sql.Open("sqlite3", dbFile)
+	db, err := sql.Open("sqlite", dbFile)
 	if err != nil {
 		log.Printf("Error: %v", err)
 		return nil
@@ -75,7 +75,7 @@ func (d *dbContext) open() (err error) {
 			return
 		}
 	}
-	if d.db, err = sql.Open("sqlite3", dbFile); err != nil {
+	if d.db, err = sql.Open("sqlite", dbFile); err != nil {
 		err = fmt.Errorf("Error open database: %v", err)
 		return
 	}
