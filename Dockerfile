@@ -10,7 +10,6 @@ RUN go mod tidy &&  go build -o noteman
 
 FROM alpine:3.20
 RUN mkdir -p /noteman/db
-RUN mkdir -p /noteman/logs
 COPY --from=golang /app/noteman /noteman/noteman
 COPY --from=golang /app/static /noteman/static
 COPY --from=golang /app/templates /noteman/templates

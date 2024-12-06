@@ -3,8 +3,6 @@ services:
     container_name: noteman
     image: noteman:20241206
     restart: always
-    ports:
-      - 9992:8080
     volumes:
       - ./db:/noteman/db
     networks:
