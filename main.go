@@ -2,26 +2,29 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	"flag"
 	"os"
 	"path/filepath"
 )
 
 var (
 	port string
-	dbFile string
+	connectionString string
+	driver string
 )
 
 func init() {
 	var (
-		db *dbContext
+		db DB
+		err error
 	)
 	currentDir := getCurrentDir()
-	flag.StringVar(&dbFile, "dbFile", filepath.Join(currentDir, "db", "noteman.db"), "Database file path")
+	flag.StringVar(&connectionString, "connectionString", filepath.Join(currentDir, "db", "noteman.db"), "Database connection string")
+	flag.StringVar(&driver, "driver", "pg", "Database driver")
 	flag.StringVar(&port, "port", "9991", "Port number")
 	flag.Parse()
 	
@@ -29,8 +32,16 @@ func init() {
 	fs := http.FileServer(http.Dir(filepath.Join(currentDir, "static")))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	// init database
-	if db = newDbContext(); db == nil {
+	if db = newDbContext(driver, connectionString); db == nil {
 		panic("Cannot connect to database")
+	}
+	if err = db.Open(); err != nil {
+		log.Fatalf("Error open database: %v", err)
+	}
+	if !db.IsSchemaExists(){
+		if err = db.CreateSchema(); err != nil {
+			log.Fatalf("Error create schema: %v", err)
+		}
 	}
 	// init handlers
 	http.Handle("/data", newHandler(getDataHandler, db))
@@ -53,16 +64,16 @@ type JSONMap map[string]interface{}
 // JSONMapArray array of JSONMap objects
 type JSONMapArray []JSONMap
 
-type handlerFunc func(http.ResponseWriter, *http.Request, *dbContext) error
+type handlerFunc func(http.ResponseWriter, *http.Request, DB) error
 
 // handler is a wrapper for HTTP handler function
 type handler struct {
 	f  handlerFunc
-	db *dbContext
+	db DB
 }
 
 // NewHandler creates new handler instance
-func newHandler(f handlerFunc, db *dbContext) *handler {
+func newHandler(f handlerFunc, db DB) *handler {
 	return &handler{f, db}
 }
 
@@ -77,7 +88,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
 	)
-	if err = h.db.open(); err != nil {
+	if err = h.db.Open(); err != nil {
 		h.err(w, r, err)
 		return
 	}
@@ -87,7 +98,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request, db *dbContext) error {
+func indexHandler(w http.ResponseWriter, r *http.Request, db DB) error {
 	currentDir := getCurrentDir()
 	templates, err := template.ParseFiles(filepath.Join(currentDir, "templates", "index.html"))
 	if err != nil {
@@ -96,7 +107,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request, db *dbContext) error {
 	return templates.ExecuteTemplate(w, "index", nil)
 }
 
-func getDataHandler(w http.ResponseWriter, r *http.Request, db *dbContext) (err error) {
+func getDataHandler(w http.ResponseWriter, r *http.Request, db DB) (err error) {
 	results := make(JSONMap)
 	w.Header().Add("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Add("Pragma", "no-cache")
@@ -111,24 +122,24 @@ func getDataHandler(w http.ResponseWriter, r *http.Request, db *dbContext) (err 
 
 	return
 }
-func getData(w http.ResponseWriter, r *http.Request, db *dbContext) (result JSONMapArray, err error) {
+func getData(w http.ResponseWriter, r *http.Request, db DB) (result JSONMapArray, err error) {
 	var (
 		exists     bool
-		udata      userData
+		uData      UserData
 		stringData string
 	)
 	name, pswd := r.FormValue("name"), r.FormValue("pswd")
-	if exists, err = db.isUserExists(name); err != nil {
-		db.error(err)
+	if exists, err = db.IsUserExists(name); err != nil {
+		log.Printf("Error: %v", err)
 		return
 	}
 	if !exists {
 		return
 	}
-	if udata, err = db.getData(name); err != nil {
+	if uData, err = db.GetData(name); err != nil {
 		return
 	}
-	if stringData, err = decrypt(udata.data, pswd); err != nil {
+	if stringData, err = decrypt(uData.data, pswd); err != nil {
 		return
 	}
 	// this will check if data were correctly decrypted
@@ -139,7 +150,7 @@ func getData(w http.ResponseWriter, r *http.Request, db *dbContext) (result JSON
 	return
 }
 
-func saveDataHandler(w http.ResponseWriter, r *http.Request, db *dbContext) (err error) {
+func saveDataHandler(w http.ResponseWriter, r *http.Request, db DB) (err error) {
 	results := make(JSONMap)
 	jsonWr := json.NewEncoder(w)
 	if result, err := saveData(w, r, db); err != nil {
@@ -150,7 +161,7 @@ func saveDataHandler(w http.ResponseWriter, r *http.Request, db *dbContext) (err
 	jsonWr.Encode(results)
 	return
 }
-func saveData(w http.ResponseWriter, r *http.Request, db *dbContext) (result JSONMapArray, err error) {
+func saveData(w http.ResponseWriter, r *http.Request, db DB) (result JSONMapArray, err error) {
 	var (
 		data []byte
 	)
@@ -163,10 +174,10 @@ func saveData(w http.ResponseWriter, r *http.Request, db *dbContext) (result JSO
 		return
 	}
 	if data, err = encrypt(stringData, pswd); err != nil {
-		db.log(err.Error())
+		err = fmt.Errorf("Error: %v", err)
 		return
 	}
-	err = db.saveData(name, data)
+	err = db.SaveData(name, data)
 	return
 }
 

@@ -16,4 +16,4 @@ COPY --from=golang /app/templates /noteman/templates
 
 EXPOSE 8080
 
-ENTRYPOINT ["/noteman/noteman", "-port", "8080", "-dbFile", "/noteman/db/notman.db"]
+ENTRYPOINT ["/noteman/noteman", "-port", "8080", "-connectionString", "$CONNECTION_STRING", "-driver", "$DRIVER"]
